@@ -1,4 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
+import L1DashboardView from './dashboards/L1DashboardView';
+import L2DashboardView from './dashboards/L2DashboardView';
+import L4DashboardView from './dashboards/L4DashboardView';
+
 import { api } from '../services/api';
 import StatCard from '../components/StatCard';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -6,7 +11,7 @@ import { formatCurrency } from '../lib/utils';
 import { RefreshCw, Calendar } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const Dashboard = () => {
+const L3DashboardView = () => {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30d');
@@ -96,6 +101,24 @@ const Dashboard = () => {
       </div>
     </div>
   );
+};
+
+
+const Dashboard = () => {
+  const { user } = useAuth();
+
+  switch (user.role) {
+    case 'L1':
+      return <L1DashboardView />;
+    case 'L2':
+      return <L2DashboardView />;
+    case 'L3':
+      return <L3DashboardView />;
+    case 'L4':
+      return <L4DashboardView />;
+    default:
+      return <div>No dashboard available for your role.</div>;
+  }
 };
 
 export default Dashboard;

@@ -34,8 +34,8 @@ const MainLayout = () => {
   if (!user) return <Navigate to="/login" />;
 
   // Role Based Access Control Logic
-  const isL4 = user.role === 'L4';
   const isL1 = user.role === 'L1';
+  const isL3 = user.role === 'L3';
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex transition-colors duration-200">
@@ -63,9 +63,9 @@ const MainLayout = () => {
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-4 mt-8">Management</div>
           <SidebarItem to="/integrations" icon={Layers} label="Integrations" />
           
-          {!isL4 && <SidebarItem to="/team" icon={Users} label="Team" />}
-          {(isL1 || !isL4) && <SidebarItem to="/billing" icon={CreditCard} label="Billing" />}
-          {!isL4 && <SidebarItem to="/settings" icon={Settings} label="Settings" />}
+          {(isL1 || isL3) && <SidebarItem to="/team" icon={Users} label="Team" />}
+          {(isL1 || isL3) && <SidebarItem to="/billing" icon={CreditCard} label="Billing" />}
+          {(isL1 || isL3) && <SidebarItem to="/settings" icon={Settings} label="Settings" />}
         </nav>
 
         <div className="absolute bottom-0 w-full p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
