@@ -32,6 +32,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     localStorage.removeItem('ecomEzUser');
     toast.success('Logged out');
+    window.location.href = '/login';
   };
 
   return (
