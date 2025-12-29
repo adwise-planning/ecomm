@@ -28,7 +28,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('ecomEzUser', JSON.stringify(res.user));
       toast.success(`Welcome, ${res.user.name}`);
       return true;
-    } catch (err)      toast.error(err.message);
+    } catch (err) {
+      toast.error(err.message);
       return false;
     }
   };
