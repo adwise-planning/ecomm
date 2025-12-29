@@ -5,21 +5,15 @@ import toast from 'react-hot-toast';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
+  const [user, setUser] = useState(() => {
     try {
       const storedUser = localStorage.getItem('ecomEzUser');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
+      return storedUser ? JSON.parse(storedUser) : null;
     } catch (error) {
       console.error("Failed to parse user from localStorage", error);
-    } finally {
-      setLoading(false);
+      return null;
     }
-  }, []);
+  });
 
   const login = async (email, otp) => {
     try {
@@ -41,8 +35,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
     </AuthContext.Provider>
   );
 };

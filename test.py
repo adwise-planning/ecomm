@@ -72,12 +72,18 @@ def parse_body(environ):
 
 
 # --- Demo data stores (in-memory) ---
-TEAM = [
-    {"id": 1, "name": "Aarav Sharma", "email": "aarav.sharma@example.com", "role": "L1"},
-    {"id": 2, "name": "Diya Patel", "email": "diya.patel@example.com", "role": "L3"},
-    {"id": 3, "name": "Rohan Mehta", "email": "rohan.mehta@example.com", "role": "L2"},
-    {"id": 4, "name": "Priya Singh", "email": "priya.singh@example.com", "role": "L4"},
-]
+TEAM_DATA_FILE = "team_data.json"
+
+def read_team_data():
+    try:
+        with open(TEAM_DATA_FILE, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+def write_team_data(data):
+    with open(TEAM_DATA_FILE, 'w') as f:
+        json.dump(data, f, indent=4)
 
 INTEGRATIONS = [
     {"id": "stripe", "name": "Stripe", "connected": True},
@@ -193,12 +199,40 @@ def generate_orders(page=1, limit=10, sortBy=None, sortDir="asc", status=None, p
     return {"data": orders[start:end], "page": page, "limit": limit, "total": filtered_total}
 
 
+RECOMMENDATION_POOL = [
+    {"id": "rec_1", "title": "Enable partial COD for high-value orders", "impact": "high", "category": "Payment", "description": "Reduce RTO risk by collecting a partial payment upfront for Cash on Delivery orders above a certain value.", "action_link": "/settings/payments"},
+    {"id": "rec_2", "title": "Re-target users with abandoned carts via WhatsApp", "impact": "medium", "category": "Marketing", "description": "Engage customers who have dropped off during checkout using automated WhatsApp messages to recover potentially lost sales.", "action_link": "/integrations/whatsapp"},
+    {"id": "rec_3", "title": "Analyze shipping zones with high RTO rates", "impact": "high", "category": "Logistics", "description": "Identify pincodes or regions with unusually high Return to Origin rates to optimize your shipping strategy.", "action_link": "/analytics/rto"},
+    {"id": "rec_4", "title": "Introduce express shipping options", "impact": "medium", "category": "Logistics", "description": "Offer faster shipping options at a premium to improve customer satisfaction and potentially increase conversion rates.", "action_link": "/settings/shipping"},
+    {"id": "rec_5", "title": "Run a flash sale on slow-moving inventory", "impact": "low", "category": "Marketing", "description": "Clear out old stock and generate quick revenue by offering a limited-time discount on products with low sales velocity.", "action_link": "/products/inventory"},
+    {"id": "rec_6", "title": "Optimize product images for faster load times", "impact": "low", "category": "Website", "description": "Improve user experience and SEO by compressing and resizing product images, leading to faster page loads.", "action_link": "/settings/theme"},
+    {"id": "rec_7", "title": "A/B test your checkout button color", "impact": "medium", "category": "Website", "description": "Experiment with different colors for your 'Buy Now' or 'Checkout' button to see if it impacts conversion rates.", "action_link": "/settings/theme"},
+]
+
 def generate_recommendations():
+    # Simulate some AI variability - sometimes it might not have any recommendations
+    if random.random() < 0.1: # 10% chance of no recommendations
+        return {"recommendations": []}
+
+    # Select a random number of recommendations
+    num_to_return = random.randint(2, 4)
     return {
-        "recommendations": [
-            {"id": "rec_1", "title": "Enable partial COD for high-value orders", "impact": "high"},
-            {"id": "rec_2", "title": "Re-target users with abandoned carts via WhatsApp", "impact": "medium"},
-            {"id": "rec_3", "title": "Analyze shipping zones with high RTO rates", "impact": "high"},
+        "recommendations": random.sample(RECOMMENDATION_POOL, num_to_return)
+    }
+
+def generate_rto_analytics():
+    regions = ["North", "South", "East", "West"]
+    risks = ["Critical", "High", "Moderate", "Low"]
+    reasons = ["Customer Not Available", "Incorrect Address", "Order Cancelled by Customer", "Other"]
+
+    return {
+        "byRegion": [
+            {"name": region, "value": round(random.uniform(5, 25), 1), "risk": random.choice(risks)}
+            for region in regions
+        ],
+        "reasons": [
+            {"name": reason, "value": random.randint(100, 500)}
+            for reason in reasons
         ]
     }
 
@@ -233,6 +267,9 @@ def application(environ, start_response):
             search = qs.get("searchTerm", [""])[0]
             payload = generate_orders(page=page, limit=limit, sortBy=sortBy, sortDir=sortDir, status=status_filter, paymentMode=payment_filter, searchTerm=search)
             status = 200
+        elif path == "/analytics/rto" and method == "GET":
+            payload = generate_rto_analytics()
+            status = 200
         elif path == "/ai/recommendations" and method == "GET":
             payload = generate_recommendations()
             status = 200
@@ -240,15 +277,18 @@ def application(environ, start_response):
             payload = {"integrations": INTEGRATIONS}
             status = 200
         elif path == "/team" and method == "GET":
-            payload = {"members": TEAM}
+            payload = {"members": read_team_data()}
             status = 200
         elif path == "/team/invite" and method == "POST":
             email = body.get("email")
             if not email:
                 status, payload = 400, {"message": "Email is required"}
             else:
-                new_member = {"id": len(TEAM) + 1, "name": body.get("name") or email.split("@")[0], "email": email, "role": "invited"}
-                TEAM.append(new_member)
+                team = read_team_data()
+                new_id = max(m['id'] for m in team) + 1 if team else 1
+                new_member = {"id": new_id, "name": body.get("name") or email.split("@")[0], "email": email, "role": "invited"}
+                team.append(new_member)
+                write_team_data(team)
                 status, payload = 201, {"message": "Invitation sent", "member": new_member}
         elif path == "/billing/invoices" and method == "GET":
             payload = {"invoices": INVOICES}
