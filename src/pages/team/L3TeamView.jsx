@@ -5,8 +5,9 @@ import toast from 'react-hot-toast';
 
 const L3TeamView = () => {
   const [members, setMembers] = useState([
-    { id: 1, name: 'Mike Johnson', email: 'mike.johnson@example.com', role: 'L4', status: 'Pending' },
-    { id: 2, name: 'Sarah Williams', email: 'sarah.williams@example.com', role: 'L4', status: 'Active' },
+    { id: 1, name: 'Mike Johnson', email: 'mike.johnson@example.com', role: 'L4 - Read Only', status: 'Pending' },
+    { id: 2, name: 'Sarah Williams', email: 'sarah.williams@example.com', role: 'L4 - Read Only', status: 'Active' },
+    { id: 3, name: 'David Chen', email: 'david.chen@example.com', role: 'L3 - Manager', status: 'Active' },
   ]);
   const { register, handleSubmit, reset } = useForm();
 
@@ -15,7 +16,7 @@ const L3TeamView = () => {
       id: members.length + 1,
       name: data.name,
       email: data.email,
-      role: 'L4',
+      role: data.role, // Use the role from the form
       status: 'Pending',
     };
     setMembers([...members, newMember]);
@@ -28,27 +29,38 @@ const L3TeamView = () => {
     toast.success('User removed');
   };
 
+  // Define the roles that an L3 user can assign
+  const assignableRoles = ['L4 - Read Only', 'L3 - Manager', 'L3 - Analyst'];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Team Management</h1>
-        <p className="text-slate-500 dark:text-slate-400">Invite and manage your team of L4 (Read-only) users.</p>
+        <p className="text-slate-500 dark:text-slate-400">Invite and manage your team members.</p>
       </div>
 
       <div className="card dark:bg-slate-800 dark:border-slate-700">
         <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-          <UserPlus size={20} /> Invite New L4 User
+          <UserPlus size={20} /> Invite New User
         </h3>
-        <form onSubmit={handleSubmit(onInvite)} className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="flex-1 w-full">
+        <form onSubmit={handleSubmit(onInvite)} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="w-full">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Name</label>
             <input {...register('name', { required: true })} className="w-full mt-1 p-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-primary" placeholder="John Doe" />
           </div>
-          <div className="flex-1 w-full">
+          <div className="w-full">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
             <input {...register('email', { required: true })} className="w-full mt-1 p-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-primary" placeholder="john@company.com" />
           </div>
-          <button type="submit" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-600 font-medium transition-colors">
+          <div className="w-full">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
+            <select {...register('role', { required: true })} className="w-full mt-1 p-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-primary">
+              {assignableRoles.map(role => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
+          </div>
+          <button type="submit" className="md:col-span-3 bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-600 font-medium transition-colors w-full md:w-auto justify-self-end">
             Send Invite
           </button>
         </form>

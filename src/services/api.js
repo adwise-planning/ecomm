@@ -48,12 +48,18 @@ export const api = {
     }
   },
 
-  getOrders: async (page = 1, limit = 10, sort = null) => {
+  getOrders: async (page = 1, limit = 10, sort = null, filters = {}, searchTerm = '') => {
     try {
-      const params = new URLSearchParams({ page, limit });
+      const params = new URLSearchParams({ page, limit, searchTerm });
       if (sort) {
         params.append('sortBy', sort.key);
         params.append('sortDir', sort.dir);
+      }
+      if (filters.status) {
+        params.append('status', filters.status);
+      }
+      if (filters.paymentMode) {
+        params.append('paymentMode', filters.paymentMode);
       }
       const response = await apiClient.get(`/orders?${params.toString()}`);
       return response.data;

@@ -3,18 +3,27 @@ import { useAuth } from '../context/AuthContext';
 import L1DashboardView from './dashboards/L1DashboardView';
 import L2DashboardView from './dashboards/L2DashboardView';
 import L4DashboardView from './dashboards/L4DashboardView';
-
+import RevenueWidget from '../components/dashboard/RevenueWidget';
+import OrdersWidget from '../components/dashboard/OrdersWidget';
+import RtoWidget from '../components/dashboard/RtoWidget';
+import RoiWidget from '../components/dashboard/RoiWidget';
+import RevenueChartWidget from '../components/dashboard/RevenueChartWidget';
 import { api } from '../services/api';
-import StatCard from '../components/StatCard';
-import { Skeleton } from '../components/ui/Skeleton';
-import { formatCurrency } from '../lib/utils';
-import { RefreshCw, Calendar } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { RefreshCw, Calendar, Layout } from 'lucide-react';
 
 const L3DashboardView = () => {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30d');
+
+  // This state will eventually be user-configurable
+  const [widgets, setWidgets] = useState([
+    { id: 'revenue', component: RevenueWidget, gridSpan: 1 },
+    { id: 'orders', component: OrdersWidget, gridSpan: 1 },
+    { id: 'rto', component: RtoWidget, gridSpan: 1 },
+    { id: 'roi', component: RoiWidget, gridSpan: 1 },
+    { id: 'revenueChart', component: RevenueChartWidget, gridSpan: 4 },
+  ]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -53,51 +62,22 @@ const L3DashboardView = () => {
           <button onClick={fetchData} className="p-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
             <RefreshCw size={18} />
           </button>
+          <button className="p-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+            <Layout size={18} />
+          </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {loading ? (
-          [...Array(4)].map((_, i) => <Skeleton key={i} className="h-32" />)
-        ) : (
-          <>
-            <StatCard title="Total Revenue" value={metrics.revenue.value} growth={metrics.revenue.growth} prefix="₹" />
-            <StatCard title="Total Orders" value={metrics.orders.value} growth={metrics.orders.growth} />
-            <StatCard title="RTO Rate" value={metrics.rtoRate.value} growth={metrics.rtoRate.growth} suffix="%" inverse />
-            
-            <div className="card bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900 border-blue-100 dark:border-slate-700">
-              <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Est. ROI Generated</div>
-              <div className="text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(metrics.roi.value)}</div>
-              <div className="text-xs text-slate-500 mt-2">Money saved via RTO reduction</div>
+        {widgets.map(widget => {
+          const WidgetComponent = widget.component;
+          const style = { gridColumn: `span ${widget.gridSpan}` };
+          return (
+            <div key={widget.id} style={style}>
+              <WidgetComponent metrics={metrics} loading={loading} />
             </div>
-          </>
-        )}
-      </div>
-
-      <div className="card h-[400px] dark:bg-slate-800 dark:border-slate-700">
-        <h3 className="font-bold text-slate-800 dark:text-white mb-6">Revenue vs RTO Trend</h3>
-        <div className="card-body flex-1 min-h-0">
-          {loading ? <Skeleton className="h-full w-full" /> : (
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={metrics.chartData}>
-              <defs>
-                <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1}/>
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
-              <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
-              <Tooltip 
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} 
-              />
-              <Area type="monotone" dataKey="revenue" stroke="#3B82F6" fillOpacity={1} fill="url(#colorRev)" />
-              <Area type="monotone" dataKey="rtoRate" stroke="#EF4444" fill="none" />
-            </AreaChart>
-          </ResponsiveContainer>
-          )}
-        </div>
+          );
+        })}
       </div>
     </div>
   );
