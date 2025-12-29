@@ -14,7 +14,8 @@ from urllib.parse import parse_qs
 import json
 import time
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+import random
 
 PORT = 5000
 
@@ -70,191 +71,197 @@ def parse_body(environ):
     return {}
 
 
-# Demo data stores (in-memory)
+# --- Demo data stores (in-memory) ---
 TEAM = [
-    {"id": 1, "name": "Alice Admin", "email": "alice@example.com", "role": "admin"},
-    {"id": 2, "name": "Bob Ops", "email": "bob@example.com", "role": "member"},
+    {"id": 1, "name": "Aarav Sharma", "email": "aarav.sharma@example.com", "role": "L1"},
+    {"id": 2, "name": "Diya Patel", "email": "diya.patel@example.com", "role": "L3"},
+    {"id": 3, "name": "Rohan Mehta", "email": "rohan.mehta@example.com", "role": "L2"},
+    {"id": 4, "name": "Priya Singh", "email": "priya.singh@example.com", "role": "L4"},
 ]
 
 INTEGRATIONS = [
     {"id": "stripe", "name": "Stripe", "connected": True},
     {"id": "klarna", "name": "Klarna", "connected": False},
+    {"id": "razorpay", "name": "Razorpay", "connected": True},
+    {"id": "shiprocket", "name": "Shiprocket", "connected": False},
 ]
 
 INVOICES = [
     {"id": "inv_001", "date": "2025-12-01", "amount": 199.99, "status": "paid"},
     {"id": "inv_002", "date": "2025-12-15", "amount": 49.99, "status": "pending"},
+    {"id": "inv_003", "date": "2025-11-20", "amount": 150.00, "status": "paid"},
 ]
 
 SETTINGS = {"notifications": True, "currency": "INR", "timezone": "Asia/Kolkata"}
 
+# --- Route Handlers & Data Generators ---
+
+USER_ROLES = {
+    "1111": {"id": 1, "name": "Aarav Sharma (L1)", "email": "l1@example.com", "role": "L1", "company": "SuperAdmin Co"},
+    "2222": {"id": 2, "name": "Rohan Mehta (L2)", "email": "l2@example.com", "role": "L2", "company": "Analytics Inc."},
+    "3333": {"id": 3, "name": "Diya Patel (L3)", "email": "l3@example.com", "role": "L3", "company": "Logistics LLC"},
+    "4444": {"id": 4, "name": "Priya Singh (L4)", "email": "l4@example.com", "role": "L4", "company": "Support Solutions"},
+}
 
 def handle_auth_login(body):
     email = body.get("email")
     otp = body.get("otp")
-    # Support both JSON and form-encoded (parse_qs) bodies
-    if isinstance(email, list):
-        email = email[0]
-    if isinstance(otp, list):
-        otp = otp[0]
+    if isinstance(email, list): email = email[0]
+    if isinstance(otp, list): otp = otp[0]
 
-    # Demo permutations
     if not email or not otp:
-        return 400, {"message": "email and otp required"}
+        return 400, {"message": "Email and OTP are required"}
 
-    # Good credential
-    if otp == "1234":
-        user = {"id": 100, "name": "Demo User", "email": email, "token": "demo-token-abc", "role": "member"}
-        logger.info("login success: %s (member)", email)
+    if otp in USER_ROLES:
+        user = USER_ROLES[otp]
+        user["token"] = f"token-for-{user['role']}"
+        logger.info("Login success: %s as %s", email, user['role'])
         return 200, {"user": user}
 
-    # OTP 'admin' returns admin user
-    if otp == "admin":
-        user = {"id": 1, "name": "Demo Admin", "email": email, "token": "admin-token-xyz", "role": "admin"}
-        logger.info("login success: %s (admin)", email)
-        return 200, {"user": user}
-
-    logger.warning("login failed for %s with otp=%s", email, otp)
+    logger.warning("Login failed for %s with otp=%s", email, otp)
     return 401, {"message": "Invalid OTP"}
 
 
-def generate_dashboard_metrics(range_days):
-    if range_days == "7":
-        revenue = {"value": 12345.67, "growth": 2.3}
-        orders = {"value": 321, "growth": 1.1}
-        rtoRate = {"value": 4.2, "growth": -0.5}
-    elif range_days == "30":
-        revenue = {"value": 54321.12, "growth": 5.8}
-        orders = {"value": 1290, "growth": 3.8}
-        rtoRate = {"value": 6.5, "growth": 0.2}
-    else:
-        revenue = {"value": 200000.0, "growth": 12.0}
-        orders = {"value": 5200, "growth": 10.0}
-        rtoRate = {"value": 7.1, "growth": 1.5}
+def generate_dashboard_metrics(range_str):
+    days = int(range_str.replace('d', ''))
 
-    return {"revenue": revenue, "orders": orders, "rtoRate": rtoRate}
+    # Base values
+    base_revenue = 10000 * days
+    base_orders = 20 * days
+    base_rto_rate = 5.0
+    base_roi = 500 * days
+
+    # Simulate some variance
+    revenue_val = base_revenue * (1 + random.uniform(-0.1, 0.1))
+    orders_val = int(base_orders * (1 + random.uniform(-0.1, 0.1)))
+    rto_rate_val = base_rto_rate + random.uniform(-1.0, 1.0)
+    roi_val = base_roi * (1 + random.uniform(-0.2, 0.2))
+
+    # Generate chart data
+    chart_data = []
+    end_date = datetime.now()
+    for i in range(days):
+        date = end_date - timedelta(days=i)
+        chart_data.append({
+            "name": date.strftime('%b %d'),
+            "revenue": 1000 + i * 50 + random.randint(-200, 200),
+            "rtoRate": 5 + random.uniform(-2, 2)
+        })
+    chart_data.reverse()
+
+    return {
+        "revenue": {"value": revenue_val, "growth": round(random.uniform(-5, 15), 1)},
+        "orders": {"value": orders_val, "growth": round(random.uniform(-5, 15), 1)},
+        "rtoRate": {"value": round(rto_rate_val, 1), "growth": round(random.uniform(-1, 1), 1)},
+        "roi": {"value": roi_val, "growth": round(random.uniform(-5, 20), 1)},
+        "chartData": chart_data
+    }
 
 
-def generate_orders(page=1, limit=10, sortBy=None, sortDir="asc"):
-    total = 45
+def generate_orders(page=1, limit=10, sortBy=None, sortDir="asc", status=None, paymentMode=None, searchTerm=""):
+    total = 150
     orders = []
-    statuses = ["delivered", "shipped", "processing", "returned"]
-    for i in range(1, total + 1):
-        orders.append(
-            {
-                "id": f"ORD-{1000 + i}",
-                "date": f"2025-12-{(i%28)+1:02d}",
-                "amount": round(50 + (i * 7.33) % 500, 2),
-                "status": statuses[i % len(statuses)],
-            }
-        )
+    statuses = ["Delivered", "Shipped", "Processing", "Returned", "Cancelled"]
+    payment_modes = ["Prepaid", "COD"]
 
-    # simple sort
+    for i in range(1, total + 1):
+        orders.append({
+            "id": f"ORD-{1000 + i}",
+            "date": (datetime.now() - timedelta(days=i % 60)).strftime('%Y-%m-%d'),
+            "amount": round(50 + (i * 17.33) % 800, 2),
+            "status": statuses[i % len(statuses)],
+            "paymentMode": payment_modes[i % len(payment_modes)],
+            "customer": f"Customer {i}"
+        })
+
+    # Filtering
+    if status: orders = [o for o in orders if o['status'].lower() == status.lower()]
+    if paymentMode: orders = [o for o in orders if o['paymentMode'].lower() == paymentMode.lower()]
+    if searchTerm: orders = [o for o in orders if searchTerm.lower() in o['id'].lower() or searchTerm.lower() in o['customer'].lower()]
+
+    # Sorting
     if sortBy:
-        reverse = sortDir == "desc"
+        reverse = sortDir.lower() == "desc"
         orders.sort(key=lambda o: o.get(sortBy) or 0, reverse=reverse)
 
-    # pagination
+    # Pagination
+    filtered_total = len(orders)
     start = (page - 1) * limit
     end = start + limit
-    logger.debug("generate_orders: page=%s limit=%s sortBy=%s sortDir=%s returned=%s", page, limit, sortBy, sortDir, len(orders[start:end]))
-    return {"data": orders[start:end], "page": page, "limit": limit, "total": total}
 
-
-def generate_rto_timeseries():
-    points = []
-    now = int(time.time())
-    for i in range(12):
-        points.append({"ts": now - (11 - i) * 86400, "rto": round(5 + (i * 0.3), 2)})
-    return {"series": points}
+    logger.debug(f"generate_orders: page={page} limit={limit} sortBy={sortBy} sortDir={sortDir} returned={len(orders[start:end])}")
+    return {"data": orders[start:end], "page": page, "limit": limit, "total": filtered_total}
 
 
 def generate_recommendations():
     return {
         "recommendations": [
-            {"id": "rec_1", "title": "Offer free shipping over ₹999", "impact": "high"},
-            {"id": "rec_2", "title": "Re-target users with abandoned carts", "impact": "medium"},
+            {"id": "rec_1", "title": "Enable partial COD for high-value orders", "impact": "high"},
+            {"id": "rec_2", "title": "Re-target users with abandoned carts via WhatsApp", "impact": "medium"},
+            {"id": "rec_3", "title": "Analyze shipping zones with high RTO rates", "impact": "high"},
         ]
     }
 
+# --- Main Application ---
 
 def application(environ, start_response):
     method = environ.get("REQUEST_METHOD")
     path = environ.get("PATH_INFO", "")
     qs = parse_qs(environ.get("QUERY_STRING", ""))
+    body = parse_body(environ)
 
-    # OPTIONS preflight
     if method == "OPTIONS":
         start_response("204 No Content", [("Access-Control-Allow-Origin", "*"), ("Access-Control-Allow-Methods", "GET,POST,PUT,OPTIONS"), ("Access-Control-Allow-Headers", "Content-Type, Authorization")])
         return [b""]
 
-    body = parse_body(environ)
-
-    # Routes
     try:
-        logger.info("request: %s %s qs=%s body=%s", method, path, qs, (body if body else "{}"))
+        logger.info(f"request: {method} {path} qs={qs} body={body if body else '{}'}")
 
         if path == "/auth/login" and method == "POST":
             status, payload = handle_auth_login(body)
-            logger.debug("response: %s %s -> %s", method, path, status)
-            return json_response(start_response, status, payload)
-
-        if path == "/dashboard/metrics" and method == "GET":
-            range_days = qs.get("range", ["30"])[0]
+        elif path == "/dashboard/metrics" and method == "GET":
+            range_days = qs.get("range", ["30d"])[0]
             payload = generate_dashboard_metrics(range_days)
-            logger.debug("response: %s %s range=%s", method, path, range_days)
-            return json_response(start_response, 200, payload)
-
-        if path == "/orders" and method == "GET":
+            status = 200
+        elif path == "/orders" and method == "GET":
             page = int(qs.get("page", ["1"])[0])
             limit = int(qs.get("limit", ["10"])[0])
             sortBy = qs.get("sortBy", [None])[0]
             sortDir = qs.get("sortDir", ["asc"])[0]
-            payload = generate_orders(page=page, limit=limit, sortBy=sortBy, sortDir=sortDir)
-            logger.debug("response: %s %s page=%s limit=%s", method, path, page, limit)
-            return json_response(start_response, 200, payload)
-
-        if path == "/analytics/rto" and method == "GET":
-            payload = generate_rto_timeseries()
-            logger.debug("response: %s %s series_points=%s", method, path, len(payload.get("series", [])))
-            return json_response(start_response, 200, payload)
-
-        if path == "/ai/recommendations" and method == "GET":
+            status_filter = qs.get("status", [None])[0]
+            payment_filter = qs.get("paymentMode", [None])[0]
+            search = qs.get("searchTerm", [""])[0]
+            payload = generate_orders(page=page, limit=limit, sortBy=sortBy, sortDir=sortDir, status=status_filter, paymentMode=payment_filter, searchTerm=search)
+            status = 200
+        elif path == "/ai/recommendations" and method == "GET":
             payload = generate_recommendations()
-            logger.debug("response: %s %s count=%s", method, path, len(payload.get("recommendations", [])))
-            return json_response(start_response, 200, payload)
-
-        if path == "/integrations" and method == "GET":
-            logger.debug("response: %s %s integrations=%s", method, path, len(INTEGRATIONS))
-            return json_response(start_response, 200, {"integrations": INTEGRATIONS})
-
-        if path == "/team" and method == "GET":
-            logger.debug("response: %s %s members=%s", method, path, len(TEAM))
-            return json_response(start_response, 200, {"members": TEAM})
-
-        if path == "/team/invite" and method == "POST":
-            email = body.get("email") or (body.get("email") and body.get("email")[0])
-            name = body.get("name") or (body.get("name") and body.get("name")[0])
+            status = 200
+        elif path == "/integrations" and method == "GET":
+            payload = {"integrations": INTEGRATIONS}
+            status = 200
+        elif path == "/team" and method == "GET":
+            payload = {"members": TEAM}
+            status = 200
+        elif path == "/team/invite" and method == "POST":
+            email = body.get("email")
             if not email:
-                logger.warning("invite failed: missing email")
-                return json_response(start_response, 400, {"message": "email required"})
-            new_member = {"id": len(TEAM) + 1, "name": name or email.split("@")[0], "email": email, "role": "invited"}
-            TEAM.append(new_member)
-            logger.info("invited new member: %s", email)
-            return json_response(start_response, 201, {"message": "invited", "member": new_member})
-
-        if path == "/billing/invoices" and method == "GET":
-            logger.debug("response: %s %s invoices=%s", method, path, len(INVOICES))
-            return json_response(start_response, 200, {"invoices": INVOICES})
-
-        if path == "/settings" and method == "PUT":
+                status, payload = 400, {"message": "Email is required"}
+            else:
+                new_member = {"id": len(TEAM) + 1, "name": body.get("name") or email.split("@")[0], "email": email, "role": "invited"}
+                TEAM.append(new_member)
+                status, payload = 201, {"message": "Invitation sent", "member": new_member}
+        elif path == "/billing/invoices" and method == "GET":
+            payload = {"invoices": INVOICES}
+            status = 200
+        elif path == "/settings" and method == "PUT":
             SETTINGS.update(body or {})
-            logger.info("settings updated: %s", SETTINGS)
-            return json_response(start_response, 200, {"settings": SETTINGS})
+            status, payload = 200, {"settings": SETTINGS}
+        else:
+            status, payload = 404, {"message": "Not Found", "path": path}
 
-        # default 404
-        logger.warning("not found: %s %s", method, path)
-        return json_response(start_response, 404, {"message": "Not found", "path": path})
+        logger.debug(f"response: {method} {path} -> {status}")
+        return json_response(start_response, status, payload)
+
     except Exception as e:
         logger.exception("Unhandled error processing request %s %s", method, path)
         return json_response(start_response, 500, {"message": "Internal server error"})
@@ -266,4 +273,4 @@ if __name__ == "__main__":
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("Shutting down")
+        print("\nShutting down server.")
