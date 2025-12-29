@@ -34,16 +34,15 @@ const MainLayout = () => {
   if (!user) return <Navigate to="/login" />;
 
   // Role Based Access Control Logic
-  const isL4 = user.role === 'L4';
   const isL1 = user.role === 'L1';
+  const isL3 = user.role === 'L3';
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex transition-colors duration-200">
       {/* Sidebar */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-200 ease-in-out
-        md:relative md:translate-x-0
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2 text-primary font-bold text-xl">
@@ -57,16 +56,16 @@ const MainLayout = () => {
 
         <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-8rem)]">
           <SidebarItem to="/" icon={LayoutDashboard} label="Dashboard" />
-          <SidebarItem to="/orders" icon={Table} label="Tabular View" />
+          <SidebarItem to="/orders" icon={Table} label="Orders" />
           <SidebarItem to="/analytics" icon={BarChart3} label="RTO Analysis" />
           <SidebarItem to="/recommendations" icon={Zap} label="AI Insights" />
           
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-4 mt-8">Management</div>
           <SidebarItem to="/integrations" icon={Layers} label="Integrations" />
           
-          {!isL4 && <SidebarItem to="/team" icon={Users} label="Team" />}
-          {(isL1 || !isL4) && <SidebarItem to="/billing" icon={CreditCard} label="Billing" />}
-          {!isL4 && <SidebarItem to="/settings" icon={Settings} label="Settings" />}
+          {(isL1 || isL3) && <SidebarItem to="/team" icon={Users} label="Team" />}
+          {(isL1 || isL3) && <SidebarItem to="/billing" icon={CreditCard} label="Billing" />}
+          {(isL1 || isL3) && <SidebarItem to="/settings" icon={Settings} label="Settings" />}
         </nav>
 
         <div className="absolute bottom-0 w-full p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
@@ -78,7 +77,7 @@ const MainLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="md:ml-64 flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 md:px-8 transition-colors">
           <button className="md:hidden p-2 text-slate-600" onClick={() => setIsMobileMenuOpen(true)}>
             <Menu size={24} />
@@ -101,7 +100,7 @@ const MainLayout = () => {
         <div className="flex-1 overflow-auto p-4 md:p-8">
           <Outlet />
         </div>
-      </main>
+      </div>
     </div>
   );
 };

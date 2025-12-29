@@ -23,7 +23,7 @@ const StatCard = ({ title, value, growth, prefix = '', suffix = '', inverse = fa
               : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
           }`}>
             {isPositive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-            {Math.abs(growth)}%
+            {growth}%
           </span>
         )}
       </div>
