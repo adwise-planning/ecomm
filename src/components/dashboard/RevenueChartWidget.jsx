@@ -1,10 +1,28 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Skeleton } from '../ui/Skeleton';
+import useWidgetData from '../../hooks/useWidgetData';
+import { AlertTriangle } from 'lucide-react';
 
-const RevenueChartWidget = ({ metrics, loading }) => {
-  if (loading) {
-    return <Skeleton className="h-full w-full" />;
+const RevenueChartWidget = ({ dateRange }) => {
+  const { data: chartData, loading, error } = useWidgetData(dateRange, 'chartData');
+
+  if (error) {
+    return (
+      <div className="card h-[400px] flex flex-col items-center justify-center text-center bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+        <AlertTriangle className="text-red-500 mb-4" size={48} />
+        <p className="text-lg font-bold text-red-700 dark:text-red-400">Could not load chart data</p>
+        <p className="text-sm text-red-500 dark:text-red-500">{error.message}</p>
+      </div>
+    );
+  }
+
+  if (loading || !chartData) {
+    return (
+        <div className="card h-[400px]">
+            <Skeleton className="h-full w-full" />
+        </div>
+    );
   }
 
   return (
@@ -12,7 +30,7 @@ const RevenueChartWidget = ({ metrics, loading }) => {
       <h3 className="font-bold text-slate-800 dark:text-white mb-6">Revenue vs RTO Trend</h3>
       <div className="card-body flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={metrics.chartData}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1}/>
