@@ -1,5 +1,5 @@
 import React from 'react';
-import StatCard from '../ui/StatCard';
+import StatCard from '../StatCard';
 import { Skeleton } from '../ui/Skeleton';
 
 const RevenueWidget = ({ metrics, loading }) => {
