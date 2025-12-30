@@ -95,6 +95,15 @@ export const api = {
     }
   },
 
+  updateIntegration: async (id, data) => {
+    try {
+      const response = await apiClient.put(`/integrations/${id}`, data);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
   getTeam: async () => {
     try {
       const response = await apiClient.get('/team');
@@ -113,9 +122,62 @@ export const api = {
     }
   },
 
+  updateTeamMember: async (id, data) => {
+    try {
+      const response = await apiClient.put(`/team/${id}`, data);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  deleteTeamMember: async (id) => {
+    try {
+      await apiClient.delete(`/team/${id}`);
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
   getInvoices: async () => {
     try {
       const response = await apiClient.get('/billing/invoices');
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  getSubscription: async () => {
+    try {
+      const response = await apiClient.get('/billing/subscription');
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  updateSubscription: async (data) => {
+    try {
+      const response = await apiClient.put('/billing/subscription', data);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  updateUserProfile: async (userData) => {
+    try {
+      const response = await apiClient.put('/user/profile', userData);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  submitSupportRequest: async (formData) => {
+    try {
+      const response = await apiClient.post('/support/request', formData);
       return response.data;
     } catch (error) {
       handleError(error);

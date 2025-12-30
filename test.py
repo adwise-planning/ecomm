@@ -85,12 +85,31 @@ def write_team_data(data):
     with open(TEAM_DATA_FILE, 'w') as f:
         json.dump(data, f, indent=4)
 
-INTEGRATIONS = [
-    {"id": "stripe", "name": "Stripe", "connected": True},
-    {"id": "klarna", "name": "Klarna", "connected": False},
-    {"id": "razorpay", "name": "Razorpay", "connected": True},
-    {"id": "shiprocket", "name": "Shiprocket", "connected": False},
-]
+INTEGRATIONS_DATA_FILE = "integrations_data.json"
+
+def read_integrations_data():
+    try:
+        with open(INTEGRATIONS_DATA_FILE, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+def write_integrations_data(data):
+    with open(INTEGRATIONS_DATA_FILE, 'w') as f:
+        json.dump(data, f, indent=4)
+
+SUBSCRIPTION_DATA_FILE = "subscription_data.json"
+
+def read_subscription_data():
+    try:
+        with open(SUBSCRIPTION_DATA_FILE, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+def write_subscription_data(data):
+    with open(SUBSCRIPTION_DATA_FILE, 'w') as f:
+        json.dump(data, f, indent=4)
 
 INVOICES = [
     {"id": "inv_001", "date": "2025-12-01", "amount": 199.99, "status": "paid"},
@@ -274,8 +293,18 @@ def application(environ, start_response):
             payload = generate_recommendations()
             status = 200
         elif path == "/integrations" and method == "GET":
-            payload = {"integrations": INTEGRATIONS}
+            payload = {"integrations": read_integrations_data()}
             status = 200
+        elif path.startswith("/integrations/") and method == "PUT":
+            integration_id = path.split('/')[-1]
+            integrations = read_integrations_data()
+            integration = next((i for i in integrations if i['id'] == integration_id), None)
+            if integration:
+                integration['connected'] = body.get('connected', integration['connected'])
+                write_integrations_data(integrations)
+                status, payload = 200, {"integration": integration}
+            else:
+                status, payload = 404, {"message": "Integration not found"}
         elif path == "/team" and method == "GET":
             payload = {"members": read_team_data()}
             status = 200
@@ -290,6 +319,65 @@ def application(environ, start_response):
                 team.append(new_member)
                 write_team_data(team)
                 status, payload = 201, {"message": "Invitation sent", "member": new_member}
+        elif path.startswith("/team/") and method in ["PUT", "DELETE"]:
+            try:
+                member_id = int(path.split('/')[-1])
+            except ValueError:
+                status, payload = 400, {"message": "Invalid member ID"}
+            else:
+                team = read_team_data()
+                member_index, member = next(((i, m) for i, m in enumerate(team) if m['id'] == member_id), (None, None))
+
+                if member is None:
+                    status, payload = 404, {"message": "Team member not found"}
+                elif method == "PUT":
+                    new_role = body.get("role")
+                    if new_role not in ["L1", "L2", "L3", "L4", "invited"]:
+                        status, payload = 400, {"message": "Invalid role"}
+                    else:
+                        member['role'] = new_role
+                        write_team_data(team)
+                        status, payload = 200, {"member": member}
+                elif method == "DELETE":
+                    team.pop(member_index)
+                    write_team_data(team)
+                    status, payload = 200, {"message": "Member removed"}
+        elif path == "/billing/subscription" and method == "GET":
+            # Hardcoded user_id for simplicity
+            user_id = "user_id_1"
+            subscriptions = read_subscription_data()
+            payload = {"subscription": subscriptions.get(user_id)}
+            status = 200
+        elif path == "/billing/subscription" and method == "PUT":
+            user_id = "user_id_1"
+            subscriptions = read_subscription_data()
+            if user_id not in subscriptions: subscriptions[user_id] = {}
+
+            new_plan = body.get("plan")
+            # In a real app, you'd have plan details stored somewhere
+            plan_details = {
+                "Basic": {"price": 49.00}, "Pro": {"price": 99.00}, "Enterprise": {"price": 249.00}
+            }
+            if new_plan in plan_details:
+                subscriptions[user_id]["plan"] = new_plan
+                subscriptions[user_id]["price"] = plan_details[new_plan]["price"]
+                subscriptions[user_id]["next_invoice"] = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
+                write_subscription_data(subscriptions)
+                status, payload = 200, {"subscription": subscriptions[user_id]}
+            else:
+                status, payload = 400, {"message": "Invalid plan"}
+        elif path == "/user/profile" and method == "PUT":
+            # This is a mock endpoint, in a real app it would update a database
+            updated_user_data = body
+            logger.info("User profile updated with: %s", updated_user_data)
+            # Just echo back the data sent, assuming the update was successful
+            status, payload = 200, {"user": updated_user_data}
+        elif path == "/support/request" and method == "POST":
+            subject = body.get('subject')
+            message = body.get('message')
+            logger.info(f"New support request received: Subject='{subject}'")
+            # No data persistence, just acknowledge receipt
+            status, payload = 200, {"message": "Support request received. We will get back to you shortly."}
         elif path == "/billing/invoices" and method == "GET":
             payload = {"invoices": INVOICES}
             status = 200

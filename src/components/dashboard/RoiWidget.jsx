@@ -1,17 +1,17 @@
 import React from 'react';
 import { formatCurrency } from '../../lib/utils';
 import { Skeleton } from '../ui/Skeleton';
-import useWidgetData from '../../hooks/useWidgetData';
+import { useDashboardMetrics } from '../../hooks/useDashboardMetrics';
 import WidgetError from './WidgetError';
 
 const RoiWidget = ({ dateRange }) => {
-  const { data: metrics, loading, error } = useWidgetData(dateRange, 'roi');
+  const { data: metrics, isLoading, isError, error } = useDashboardMetrics(dateRange, 'roi');
 
-  if (error) {
+  if (isError) {
     return <WidgetError message={error.message} />;
   }
 
-  if (loading || !metrics) {
+  if (isLoading || !metrics) {
     return <div className="card h-32"><Skeleton className="h-full w-full" /></div>;
   }
 

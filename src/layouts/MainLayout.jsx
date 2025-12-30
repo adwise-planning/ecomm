@@ -6,7 +6,8 @@ import {
   LayoutDashboard, BarChart3, Zap, Settings, LogOut, Menu, X, Layers, 
   CreditCard, Sun, Moon, Table, Users, User, LifeBuoy, MoreVertical, Search
 } from 'lucide-react';
-import UserProfileModal from '../components/user/UserProfileModal'; // Import the modal
+import UserProfileModal from '../components/user/UserProfileModal';
+import SupportModal from '../components/support/SupportModal';
 import { Dropdown, DropdownItem } from '../components/ui/Dropdown';
 
 
@@ -32,6 +33,7 @@ const SidebarItem = ({ to, icon, label }) => {
 const MainLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
@@ -112,7 +114,7 @@ const MainLayout = () => {
               }
             >
               <DropdownItem icon={User} label="My Profile" onClick={() => setIsProfileModalOpen(true)} />
-              <DropdownItem icon={LifeBuoy} label="Support" onClick={() => {}} />
+              <DropdownItem icon={LifeBuoy} label="Support" onClick={() => setIsSupportModalOpen(true)} />
               <div className="my-1 h-px bg-slate-200 dark:bg-slate-600"></div>
               <DropdownItem icon={LogOut} label="Logout" onClick={logout} />
             </Dropdown>
@@ -125,6 +127,7 @@ const MainLayout = () => {
       </div>
 
       <UserProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
+      <SupportModal isOpen={isSupportModalOpen} onClose={() => setIsSupportModalOpen(false)} />
     </div>
   );
 };

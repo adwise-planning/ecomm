@@ -9,11 +9,11 @@ import RtoWidget from '../components/dashboard/RtoWidget';
 import RoiWidget from '../components/dashboard/RoiWidget';
 import RevenueChartWidget from '../components/dashboard/RevenueChartWidget';
 import { RefreshCw, Calendar, Layout } from 'lucide-react';
-import { cache } from '../hooks/useWidgetData';
+import { useQueryClient } from '@tanstack/react-query';
 
 const L3DashboardView = () => {
+  const queryClient = useQueryClient();
   const [dateRange, setDateRange] = useState('30d');
-  const [refreshKey, setRefreshKey] = useState(0);
 
   // This state will eventually be user-configurable
   const [widgets, setWidgets] = useState([
@@ -25,8 +25,7 @@ const L3DashboardView = () => {
   ]);
 
   const handleRefresh = () => {
-    cache.delete(dateRange);
-    setRefreshKey(prevKey => prevKey + 1);
+    queryClient.invalidateQueries(['dashboardMetrics', dateRange]);
   };
 
   return (
@@ -63,7 +62,7 @@ const L3DashboardView = () => {
           const WidgetComponent = widget.component;
           const style = { gridColumn: `span ${widget.gridSpan}` };
           return (
-            <div key={`${widget.id}-${refreshKey}`} style={style}>
+            <div key={widget.id} style={style}>
               <WidgetComponent dateRange={dateRange} />
             </div>
           );

@@ -1,23 +1,21 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Skeleton } from '../ui/Skeleton';
-import useWidgetData from '../../hooks/useWidgetData';
-import { AlertTriangle } from 'lucide-react';
+import { useDashboardMetrics } from '../../hooks/useDashboardMetrics';
+import WidgetError from './WidgetError';
 
 const RevenueChartWidget = ({ dateRange }) => {
-  const { data: chartData, loading, error } = useWidgetData(dateRange, 'chartData');
+  const { data: chartData, isLoading, isError, error } = useDashboardMetrics(dateRange, 'chartData');
 
-  if (error) {
+  if (isError) {
     return (
-      <div className="card h-[400px] flex flex-col items-center justify-center text-center bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
-        <AlertTriangle className="text-red-500 mb-4" size={48} />
-        <p className="text-lg font-bold text-red-700 dark:text-red-400">Could not load chart data</p>
-        <p className="text-sm text-red-500 dark:text-red-500">{error.message}</p>
-      </div>
+        <div className="card h-[400px]">
+            <WidgetError message={error.message} />
+        </div>
     );
   }
 
-  if (loading || !chartData) {
+  if (isLoading || !chartData) {
     return (
         <div className="card h-[400px]">
             <Skeleton className="h-full w-full" />

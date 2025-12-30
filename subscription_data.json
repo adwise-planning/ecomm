@@ -1,0 +1,8 @@
+{
+    "user_id_1": {
+        "plan": "Pro",
+        "billing_cycle": "monthly",
+        "price": 99.00,
+        "next_invoice": "2026-01-15"
+    }
+}
