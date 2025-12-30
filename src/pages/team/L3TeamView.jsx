@@ -28,7 +28,7 @@ const ActionDropdown = ({ children }) => {
 const L3TeamView = () => {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error, refetch } = useQueryData(['team'], api.getTeam);
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset } = useForm({ defaultValues: { role: 'L4' } });
 
   const [editingMember, setEditingMember] = useState(null);
 
@@ -54,13 +54,13 @@ const L3TeamView = () => {
     const optimisticUpdate = handleOptimisticUpdate(
       (currentData) => ({
         ...currentData,
-        members: [...currentData.members, { ...formData, id: Date.now(), role: 'invited' }]
+        members: [...currentData.members, { ...formData, id: Date.now(), role: formData.role }]
       }),
       `Invitation sent to ${formData.email}`,
       'Failed to send invite'
     );
-    optimisticUpdate(api.inviteMember(formData.email, formData.name));
-    reset();
+    optimisticUpdate(api.inviteMember(formData.email, formData.name, formData.role));
+    reset({ role: 'L4' });
   };
 
   const onRoleChange = (memberId, newRole) => {
@@ -158,7 +158,13 @@ const L3TeamView = () => {
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
             <input {...register('email', { required: true })} className="w-full mt-1 p-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-primary" placeholder="john@company.com" />
           </div>
-          <button type="submit" className="md:col-span-2 bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-600 font-medium transition-colors w-full md:w-auto justify-self-end">
+          <div className="w-full">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Role</label>
+            <select {...register('role')} disabled className="w-full mt-1 p-2 border rounded-lg dark:bg-slate-600 dark:border-slate-500 dark:text-slate-300 outline-none cursor-not-allowed">
+              <option value="L4">L4 - Read-only User</option>
+            </select>
+          </div>
+          <button type="submit" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-600 font-medium transition-colors w-full md:w-auto justify-self-end md:col-start-2">
             Send Invite
           </button>
         </form>

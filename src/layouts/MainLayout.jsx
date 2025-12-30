@@ -1,15 +1,11 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState } from 'react';
 import { Outlet, NavLink, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { 
   LayoutDashboard, BarChart3, Zap, Settings, LogOut, Menu, X, Layers, 
-  CreditCard, Sun, Moon, Table, Users, User, LifeBuoy, MoreVertical, Search
+  CreditCard, Sun, Moon, Table, Users
 } from 'lucide-react';
-import UserProfileModal from '../components/user/UserProfileModal';
-import SupportModal from '../components/support/SupportModal';
-import { Dropdown, DropdownItem } from '../components/ui/Dropdown';
-
 
 const SidebarItem = ({ to, icon, label }) => {
   const Icon = icon;
@@ -32,8 +28,6 @@ const SidebarItem = ({ to, icon, label }) => {
 
 const MainLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
@@ -45,6 +39,7 @@ const MainLayout = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex transition-colors duration-200">
+      {/* Sidebar */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-200 ease-in-out
         md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -81,53 +76,31 @@ const MainLayout = () => {
         </div>
       </aside>
 
+      {/* Main Content */}
       <div className="md:ml-64 flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 md:px-8 transition-colors">
           <button className="md:hidden p-2 text-slate-600" onClick={() => setIsMobileMenuOpen(true)}>
             <Menu size={24} />
           </button>
 
-          <div className="flex items-center gap-4 w-full max-w-xs">
-            <Search className="text-slate-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search orders, customers..."
-              className="w-full bg-transparent text-sm focus:outline-none dark:text-white"
-            />
-          </div>
-
           <div className="flex items-center gap-4 ml-auto">
             <button onClick={toggleTheme} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full">
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <Dropdown
-              trigger={
-                <div className="flex items-center gap-3 cursor-pointer">
-                  <div className="text-right hidden sm:block">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">{user.name}</p>
-                    <p className="text-xs text-slate-500">{user.role} - {user.company}</p>
-                  </div>
-                  <div className="h-10 w-10 rounded-full bg-blue-100 text-primary flex items-center justify-center font-bold">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                </div>
-              }
-            >
-              <DropdownItem icon={User} label="My Profile" onClick={() => setIsProfileModalOpen(true)} />
-              <DropdownItem icon={LifeBuoy} label="Support" onClick={() => setIsSupportModalOpen(true)} />
-              <div className="my-1 h-px bg-slate-200 dark:bg-slate-600"></div>
-              <DropdownItem icon={LogOut} label="Logout" onClick={logout} />
-            </Dropdown>
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium text-slate-900 dark:text-white">{user.name}</p>
+              <p className="text-xs text-slate-500">{user.role} - {user.company}</p>
+            </div>
+            <div className="h-10 w-10 rounded-full bg-blue-100 text-primary flex items-center justify-center font-bold">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-4 md:p-8">
+        <div className="flex-1 overflow-auto p-4 md:p-8">
           <Outlet />
-        </main>
+        </div>
       </div>
-
-      <UserProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
-      <SupportModal isOpen={isSupportModalOpen} onClose={() => setIsSupportModalOpen(false)} />
     </div>
   );
 };

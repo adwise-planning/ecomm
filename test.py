@@ -121,30 +121,33 @@ SETTINGS = {"notifications": True, "currency": "INR", "timezone": "Asia/Kolkata"
 
 # --- Route Handlers & Data Generators ---
 
-USER_ROLES = {
-    "1111": {"id": 1, "name": "Aarav Sharma (L1)", "email": "l1@example.com", "role": "L1", "company": "SuperAdmin Co"},
-    "2222": {"id": 2, "name": "Rohan Mehta (L2)", "email": "l2@example.com", "role": "L2", "company": "Analytics Inc."},
-    "3333": {"id": 3, "name": "Diya Patel (L3)", "email": "l3@example.com", "role": "L3", "company": "Logistics LLC"},
-    "4444": {"id": 4, "name": "Priya Singh (L4)", "email": "l4@example.com", "role": "L4", "company": "Support Solutions"},
+USERS = {
+    "l1.admin@example.com": {"id": 1, "name": "Aarav Sharma (L1)", "email": "l1.admin@example.com", "role": "L1", "company": "SuperAdmin Co", "password": "password"},
+    "l2.manager@example.com": {"id": 2, "name": "Rohan Mehta (L2)", "email": "l2.manager@example.com", "role": "L2", "company": "Analytics Inc.", "password": "password"},
+    "l3.client@example.com": {"id": 3, "name": "Diya Patel (L3)", "email": "l3.client@example.com", "role": "L3", "company": "Logistics LLC", "password": "password"},
+    "l4.viewer@example.com": {"id": 4, "name": "Priya Singh (L4)", "email": "l4.viewer@example.com", "role": "L4", "company": "Logistics LLC", "password": "password"},
 }
 
 def handle_auth_login(body):
     email = body.get("email")
-    otp = body.get("otp")
+    password = body.get("password")
+
     if isinstance(email, list): email = email[0]
-    if isinstance(otp, list): otp = otp[0]
+    if isinstance(password, list): password = password[0]
 
-    if not email or not otp:
-        return 400, {"message": "Email and OTP are required"}
+    if not email or not password:
+        return 400, {"message": "Email and password are required"}
 
-    if otp in USER_ROLES:
-        user = USER_ROLES[otp]
-        user["token"] = f"token-for-{user['role']}"
+    user = USERS.get(email)
+    if user and user["password"] == password:
+        # Don't send password back to client
+        user_data = {k: v for k, v in user.items() if k != 'password'}
+        user_data["token"] = f"token-for-{user['role']}"
         logger.info("Login success: %s as %s", email, user['role'])
-        return 200, {"user": user}
+        return 200, {"user": user_data}
 
-    logger.warning("Login failed for %s with otp=%s", email, otp)
-    return 401, {"message": "Invalid OTP"}
+    logger.warning("Login failed for %s", email)
+    return 401, {"message": "Invalid credentials"}
 
 
 def generate_dashboard_metrics(range_str):
@@ -310,12 +313,13 @@ def application(environ, start_response):
             status = 200
         elif path == "/team/invite" and method == "POST":
             email = body.get("email")
-            if not email:
-                status, payload = 400, {"message": "Email is required"}
+            role = body.get("role")
+            if not email or not role:
+                status, payload = 400, {"message": "Email and role are required"}
             else:
                 team = read_team_data()
                 new_id = max(m['id'] for m in team) + 1 if team else 1
-                new_member = {"id": new_id, "name": body.get("name") or email.split("@")[0], "email": email, "role": "invited"}
+                new_member = {"id": new_id, "name": body.get("name") or email.split("@")[0], "email": email, "role": role}
                 team.append(new_member)
                 write_team_data(team)
                 status, payload = 201, {"message": "Invitation sent", "member": new_member}
