@@ -1,10 +1,26 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Skeleton } from '../ui/Skeleton';
+import { useDashboardMetrics } from '../../hooks/useDashboardMetrics';
+import WidgetError from './WidgetError';
 
-const RevenueChartWidget = ({ metrics, loading }) => {
-  if (loading) {
-    return <Skeleton className="h-full w-full" />;
+const RevenueChartWidget = ({ dateRange }) => {
+  const { data: chartData, isLoading, isError, error } = useDashboardMetrics(dateRange, 'chartData');
+
+  if (isError) {
+    return (
+        <div className="card h-[400px]">
+            <WidgetError message={error.message} />
+        </div>
+    );
+  }
+
+  if (isLoading || !chartData) {
+    return (
+        <div className="card h-[400px]">
+            <Skeleton className="h-full w-full" />
+        </div>
+    );
   }
 
   return (
@@ -12,7 +28,7 @@ const RevenueChartWidget = ({ metrics, loading }) => {
       <h3 className="font-bold text-slate-800 dark:text-white mb-6">Revenue vs RTO Trend</h3>
       <div className="card-body flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={metrics.chartData}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1}/>

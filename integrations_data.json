@@ -1,0 +1,6 @@
+[
+    {"id": "stripe", "name": "Stripe", "connected": true},
+    {"id": "klarna", "name": "Klarna", "connected": false},
+    {"id": "razorpay", "name": "Razorpay", "connected": true},
+    {"id": "shiprocket", "name": "Shiprocket", "connected": false}
+]

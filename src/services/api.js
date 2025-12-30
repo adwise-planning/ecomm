@@ -2,8 +2,7 @@ import axios from 'axios';
 
 // Create a new axios instance with a custom configuration
 const apiClient = axios.create({
-  // baseURL: import.meta.env.VITE_API_BASE_URL,
-  baseURL: 'http://localhost:5000/',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -27,13 +26,15 @@ apiClient.interceptors.request.use(
 const handleError = (error) => {
   const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred.';
   console.error("API Error:", errorMessage);
-  throw new Error(errorMessage);
+  // Re-throwing the error to be caught by the calling function
+  throw error;
 };
 
 export const api = {
-  login: async (email, otp) => {
+  login: async (email, password) => {
     try {
-      const response = await apiClient.post('/auth/login', { email, otp });
+      // Correctly send email and password
+      const response = await apiClient.post('/auth/login', { email, password });
       return response.data;
     } catch (error) {
       handleError(error);
@@ -96,6 +97,15 @@ export const api = {
     }
   },
 
+  updateIntegration: async (id, data) => {
+    try {
+      const response = await apiClient.put(`/integrations/${id}`, data);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
   getTeam: async () => {
     try {
       const response = await apiClient.get('/team');
@@ -105,10 +115,27 @@ export const api = {
     }
   },
 
-  inviteMember: async (email, name) => {
+  inviteMember: async (email, name, role) => {
     try {
-      const response = await apiClient.post('/team/invite', { email, name });
+      const response = await apiClient.post('/team/invite', { email, name, role });
       return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  updateTeamMember: async (id, data) => {
+    try {
+      const response = await apiClient.put(`/team/${id}`, data);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  deleteTeamMember: async (id) => {
+    try {
+      await apiClient.delete(`/team/${id}`);
     } catch (error) {
       handleError(error);
     }
@@ -117,6 +144,42 @@ export const api = {
   getInvoices: async () => {
     try {
       const response = await apiClient.get('/billing/invoices');
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  getSubscription: async () => {
+    try {
+      const response = await apiClient.get('/billing/subscription');
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  updateSubscription: async (data) => {
+    try {
+      const response = await apiClient.put('/billing/subscription', data);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  updateUserProfile: async (userData) => {
+    try {
+      const response = await apiClient.put('/user/profile', userData);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  submitSupportRequest: async (formData) => {
+    try {
+      const response = await apiClient.post('/support/request', formData);
       return response.data;
     } catch (error) {
       handleError(error);

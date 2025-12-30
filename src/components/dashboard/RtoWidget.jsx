@@ -1,17 +1,25 @@
 import React from 'react';
 import StatCard from '../StatCard';
 import { Skeleton } from '../ui/Skeleton';
+import { useDashboardMetrics } from '../../hooks/useDashboardMetrics';
+import WidgetError from './WidgetError';
 
-const RtoWidget = ({ metrics, loading }) => {
-  if (loading) {
-    return <Skeleton className="h-32" />;
+const RtoWidget = ({ dateRange }) => {
+  const { data: metrics, isLoading, isError, error } = useDashboardMetrics(dateRange, 'rtoRate');
+
+  if (isError) {
+    return <WidgetError message={error.message} />;
+  }
+
+  if (isLoading || !metrics) {
+    return <div className="card h-32"><Skeleton className="h-full w-full" /></div>;
   }
 
   return (
     <StatCard
       title="RTO Rate"
-      value={metrics.rtoRate.value}
-      growth={metrics.rtoRate.growth}
+      value={metrics?.value}
+      growth={metrics?.growth}
       suffix="%"
       inverse
     />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import L1DashboardView from './dashboards/L1DashboardView';
 import L2DashboardView from './dashboards/L2DashboardView';
@@ -8,12 +8,11 @@ import OrdersWidget from '../components/dashboard/OrdersWidget';
 import RtoWidget from '../components/dashboard/RtoWidget';
 import RoiWidget from '../components/dashboard/RoiWidget';
 import RevenueChartWidget from '../components/dashboard/RevenueChartWidget';
-import { api } from '../services/api';
 import { RefreshCw, Calendar, Layout } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 const L3DashboardView = () => {
-  const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dateRange, setDateRange] = useState('30d');
 
   // This state will eventually be user-configurable
@@ -25,19 +24,9 @@ const L3DashboardView = () => {
     { id: 'revenueChart', component: RevenueChartWidget, gridSpan: 4 },
   ]);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await api.getDashboardMetrics(dateRange);
-      setMetrics(data);
-    } finally {
-      setLoading(false);
-    }
-  }, [dateRange]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const handleRefresh = () => {
+    queryClient.invalidateQueries(['dashboardMetrics', dateRange]);
+  };
 
   return (
     <div className="space-y-6">
@@ -59,7 +48,7 @@ const L3DashboardView = () => {
               <option value="90d">Last Quarter</option>
             </select>
           </div>
-          <button onClick={fetchData} className="p-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
+          <button onClick={handleRefresh} className="p-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
             <RefreshCw size={18} />
           </button>
           <button className="p-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
@@ -74,7 +63,7 @@ const L3DashboardView = () => {
           const style = { gridColumn: `span ${widget.gridSpan}` };
           return (
             <div key={widget.id} style={style}>
-              <WidgetComponent metrics={metrics} loading={loading} />
+              <WidgetComponent dateRange={dateRange} />
             </div>
           );
         })}
