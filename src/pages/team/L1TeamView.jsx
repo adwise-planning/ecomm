@@ -3,7 +3,6 @@ import { useQueryData } from '../../hooks/useQueryData';
 import { api } from '../../services/api';
 import { Skeleton } from '../../components/ui/Skeleton';
 import WidgetError from '../../components/dashboard/WidgetError';
-import { Input } from '../../components/ui/Input';
 import { useDebounce } from '../../hooks/useDebounce';
 
 const L1TeamView = () => {
@@ -77,12 +76,12 @@ const L1TeamView = () => {
       </div>
 
       <div className="card dark:bg-slate-800 dark:border-slate-700">
-        <Input
+        <input
           type="text"
           placeholder="Search by name, email, or company..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full"
+          className="w-full px-3 py-2 rounded border bg-white dark:bg-slate-700"
         />
       </div>
 
