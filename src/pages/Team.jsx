@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import L1TeamView from './team/L1TeamView.jsx';
 import L3TeamView from './team/L3TeamView.jsx';
 
 const Team = () => {
@@ -7,8 +8,7 @@ const Team = () => {
 
   switch (user.role) {
     case 'L1':
-      // Placeholder for L1 Team View
-      return <div>L1 Team Management</div>;
+      return <L1TeamView />;
     case 'L3':
       return <L3TeamView />;
     default:

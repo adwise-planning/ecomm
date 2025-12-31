@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Trash2, UserPlus, MoreVertical, Edit, X } from 'lucide-react';
+import { Trash2, UserPlus, MoreVertical, Edit, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useQueryData } from '../../hooks/useQueryData';
 import { api } from '../../services/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '../../components/ui/Skeleton';
 import WidgetError from '../../components/dashboard/WidgetError';
+import ManagePermissionsModal from './ManagePermissionsModal';
 
 // A simple dropdown for actions
 const ActionDropdown = ({ children }) => {
@@ -31,6 +32,8 @@ const L3TeamView = () => {
   const { register, handleSubmit, reset } = useForm({ defaultValues: { role: 'L4' } });
 
   const [editingMember, setEditingMember] = useState(null);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [isPermissionsModalOpen, setPermissionsModalOpen] = useState(false);
 
   const assignableRoles = ["L3", "L4"];
 
@@ -54,7 +57,7 @@ const L3TeamView = () => {
     const optimisticUpdate = handleOptimisticUpdate(
       (currentData) => ({
         ...currentData,
-        members: [...currentData.members, { ...formData, id: Date.now(), role: formData.role }]
+        members: [...currentData.members, { ...formData, id: Date.now(), role: formData.role, permissions: { dashboards: [], widgets: [] } }]
       }),
       `Invitation sent to ${formData.email}`,
       'Failed to send invite'
@@ -74,6 +77,18 @@ const L3TeamView = () => {
     );
     optimisticUpdate(api.updateTeamMember(memberId, { role: newRole }));
     setEditingMember(null);
+  };
+
+  const onSavePermissions = (memberId, permissions) => {
+    const optimisticUpdate = handleOptimisticUpdate(
+      (currentData) => ({
+        ...currentData,
+        members: currentData.members.map(m => m.id === memberId ? { ...m, permissions } : m)
+      }),
+      'Permissions updated',
+      'Failed to update permissions'
+    );
+    optimisticUpdate(api.updateTeamMember(memberId, { permissions }));
   };
 
   const onRemove = (memberId) => {
@@ -126,6 +141,11 @@ const L3TeamView = () => {
                   <button onClick={() => setEditingMember(m.id)} className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600">
                     <Edit size={14} /> Edit Role
                   </button>
+                  {m.role === 'L4' && (
+                    <button onClick={() => { setSelectedMember(m); setPermissionsModalOpen(true); }} className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600">
+                      <ShieldCheck size={14} /> Manage Permissions
+                    </button>
+                  )}
                   <button onClick={() => onRemove(m.id)} className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
                     <Trash2 size={14} /> Remove
                   </button>
@@ -140,6 +160,12 @@ const L3TeamView = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <ManagePermissionsModal
+        isOpen={isPermissionsModalOpen}
+        onClose={() => setPermissionsModalOpen(false)}
+        member={selectedMember}
+        onSave={onSavePermissions}
+      />
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Team Management</h1>
         <p className="text-slate-500 dark:text-slate-400">Invite and manage your team members.</p>

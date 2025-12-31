@@ -1,5 +1,6 @@
 import { useQueryData } from './useQueryData';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * A hook specifically for fetching and processing dashboard metrics.
@@ -10,11 +11,15 @@ import { api } from '../services/api';
  * @returns The query result from useQueryData, with data potentially transformed by the selector.
  */
 export const useDashboardMetrics = (dateRange, selector) => {
-  const queryKey = ['dashboardMetrics', dateRange];
+  const { user } = useAuth();
+  const role = user?.role;
 
-  const queryFn = () => api.getDashboardMetrics(dateRange);
+  const queryKey = ['dashboardMetrics', dateRange, role];
+
+  const queryFn = () => api.getDashboardMetrics(dateRange, role);
 
   const options = {
+    enabled: !!role, // Only run the query if the role is available
     // A selector function to pick a specific part of the data object
     select: (data) => {
       if (selector) {

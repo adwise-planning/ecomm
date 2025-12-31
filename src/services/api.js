@@ -22,6 +22,8 @@ apiClient.interceptors.request.use(
   }
 );
 
+import toast from 'react-hot-toast';
+
 // Centralized error handler
 const handleError = (error) => {
   const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred.';
@@ -29,6 +31,16 @@ const handleError = (error) => {
   // Re-throwing the error to be caught by the calling function
   throw error;
 };
+
+// Add a response interceptor for global error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const errorMessage = error.response?.data?.message || 'An unexpected error occurred. Please try again.';
+    toast.error(errorMessage);
+    return Promise.reject(error);
+  }
+);
 
 export const api = {
   login: async (email, password) => {
@@ -41,9 +53,27 @@ export const api = {
     }
   },
 
-  getDashboardMetrics: async (range) => {
+  getAllUsers: async () => {
     try {
-      const response = await apiClient.get(`/dashboard/metrics?range=${range}`);
+      const response = await apiClient.get('/users/all');
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  getUsers: async () => {
+    try {
+      const response = await apiClient.get('/users');
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  getDashboardMetrics: async (range, role) => {
+    try {
+      const response = await apiClient.get(`/dashboard/metrics?range=${range}&role=${role}`);
       return response.data;
     } catch (error) {
       handleError(error);
@@ -70,9 +100,65 @@ export const api = {
     }
   },
 
+  // This is the new, more detailed RTO analysis endpoint.
+  // The old getRtoAnalytics can be deprecated or used for a different summary widget.
+  getRtoAnalysis: async () => {
+    try {
+      const response = await apiClient.get('/analytics/rto-analysis');
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  getShippingCostPerOrder: async (range = '30d') => {
+    try {
+      const response = await apiClient.get(`/analytics/shipping-cost-per-order?range=${range}`);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
   getRtoAnalytics: async () => {
     try {
       const response = await apiClient.get('/analytics/rto');
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  getRtoTrend: async (range) => {
+    try {
+      const response = await apiClient.get(`/analytics/rto-trend?range=${range}`);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  getRtoByRegion: async () => {
+    try {
+      const response = await apiClient.get('/analytics/rto-by-region');
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  getShippingAnalytics: async (range) => {
+    try {
+      const response = await apiClient.get(`/analytics/shipping-vs-revenue?range=${range}`);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  getMetaAdsAnalytics: async (range) => {
+    try {
+      const response = await apiClient.get(`/analytics/meta-ads?range=${range}`);
       return response.data;
     } catch (error) {
       handleError(error);

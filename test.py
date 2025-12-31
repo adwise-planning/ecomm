@@ -150,6 +150,25 @@ def handle_auth_login(body):
     return 401, {"message": "Invalid credentials"}
 
 
+def generate_l1_dashboard_metrics(range_str):
+    days = int(range_str.replace('d', ''))
+
+    # Simulate some variance for L1 data
+    active_users_val = 1234 + days * 10 + random.randint(-50, 50)
+    combined_revenue_val = 1200000 + days * 10000 + random.randint(-50000, 50000)
+
+    l2_users_count = sum(1 for u in USERS.values() if u['role'] == 'L2')
+    l3_users_count = sum(1 for u in USERS.values() if u['role'] == 'L3')
+    l4_users_count = sum(1 for u in USERS.values() if u['role'] == 'L4')
+
+    return {
+        "activeUsers": {"value": active_users_val, "growth": round(random.uniform(-1, 5), 1)},
+        "combinedRevenue": {"value": combined_revenue_val, "growth": round(random.uniform(-2, 8), 1)},
+        "l2Users": {"value": l2_users_count, "growth": 0},
+        "l3Users": {"value": l3_users_count, "growth": 0},
+        "l4Users": {"value": l4_users_count, "growth": 0},
+    }
+
 def generate_dashboard_metrics(range_str):
     days = int(range_str.replace('d', ''))
 
@@ -258,6 +277,63 @@ def generate_rto_analytics():
         ]
     }
 
+def generate_rto_trend(range_str):
+    days = int(range_str.replace('d', ''))
+    trend_data = []
+    end_date = datetime.now()
+    for i in range(days):
+        date = end_date - timedelta(days=i)
+        trend_data.append({
+            "name": date.strftime('%b %d'),
+            "rtoRate": 5 + random.uniform(-2, 2)
+        })
+    trend_data.reverse()
+    return {"trend": trend_data}
+
+def generate_shipping_analytics(range_str):
+    days = int(range_str.replace('d', ''))
+    return {
+        "revenueVsShipping": { "revenue": 120000 * (days/30), "shippingCost": 15000 * (days/30) },
+        "costAsPercentage": random.uniform(8, 15)
+    }
+
+def generate_meta_ads_analytics(range_str):
+    days = int(range_str.replace('d', ''))
+    return {
+        "spendVsRevenue": { "spend": 8000 * (days/30), "revenue": 60000 * (days/30) },
+        "campaignRto": [
+            {"name": "Campaign A", "rto": random.uniform(5, 10)},
+            {"name": "Campaign B", "rto": random.uniform(10, 15)},
+            {"name": "Campaign C", "rto": random.uniform(2, 7)}
+        ]
+    }
+
+def generate_detailed_rto_analysis():
+    regions = ["North", "South", "East", "West", "Central"]
+    return {
+        "analysis": [
+            {
+                "region": region,
+                "rto_percentage": round(random.uniform(5, 20), 2),
+                "total_orders": random.randint(500, 2000)
+            } for region in regions
+        ]
+    }
+
+def generate_shipping_cost_per_order_data(range_str):
+    days = int(range_str.replace('d', ''))
+    data = []
+    end_date = datetime.now()
+    for i in range(days):
+        date = end_date - timedelta(days=i)
+        data.append({
+            "order_date": date.strftime('%Y-%m-%d'),
+            "shipping_cost": round(random.uniform(80, 150), 2)
+        })
+    data.reverse()
+    return {"analysis": data}
+
+
 # --- Main Application ---
 
 def application(environ, start_response):
@@ -275,9 +351,23 @@ def application(environ, start_response):
 
         if path == "/auth/login" and method == "POST":
             status, payload = handle_auth_login(body)
+        elif path == "/users" and method == "GET":
+            # Exclude L1 admin for impersonation list
+            user_list = [u for u in USERS.values() if u['role'] != 'L1']
+            payload = {"users": user_list}
+            status = 200
+        elif path == "/users/all" and method == "GET":
+            # Returns all users for the L1 admin view
+            payload = {"users": list(USERS.values())}
+            status = 200
         elif path == "/dashboard/metrics" and method == "GET":
             range_days = qs.get("range", ["30d"])[0]
-            payload = generate_dashboard_metrics(range_days)
+            role = qs.get("role", [None])[0]
+
+            if role == 'L1':
+                payload = generate_l1_dashboard_metrics(range_days)
+            else:
+                payload = generate_dashboard_metrics(range_days)
             status = 200
         elif path == "/orders" and method == "GET":
             page = int(qs.get("page", ["1"])[0])
@@ -291,6 +381,29 @@ def application(environ, start_response):
             status = 200
         elif path == "/analytics/rto" and method == "GET":
             payload = generate_rto_analytics()
+            status = 200
+        elif path == "/analytics/rto-trend" and method == "GET":
+            range_days = qs.get("range", ["30d"])[0]
+            payload = generate_rto_trend(range_days)
+            status = 200
+        elif path == "/analytics/rto-by-region" and method == "GET":
+            # Reusing the rto analytics generator for this
+            payload = {"byRegion": generate_rto_analytics()["byRegion"]}
+            status = 200
+        elif path == "/analytics/shipping-vs-revenue" and method == "GET":
+            range_days = qs.get("range", ["30d"])[0]
+            payload = generate_shipping_analytics(range_days)
+            status = 200
+        elif path == "/analytics/meta-ads" and method == "GET":
+            range_days = qs.get("range", ["30d"])[0]
+            payload = generate_meta_ads_analytics(range_days)
+            status = 200
+        elif path == "/analytics/rto-analysis" and method == "GET":
+            payload = generate_detailed_rto_analysis()
+            status = 200
+        elif path == "/analytics/shipping-cost-per-order" and method == "GET":
+            range_days = qs.get("range", ["30d"])[0]
+            payload = generate_shipping_cost_per_order_data(range_days)
             status = 200
         elif path == "/ai/recommendations" and method == "GET":
             payload = generate_recommendations()
@@ -319,7 +432,13 @@ def application(environ, start_response):
             else:
                 team = read_team_data()
                 new_id = max(m['id'] for m in team) + 1 if team else 1
-                new_member = {"id": new_id, "name": body.get("name") or email.split("@")[0], "email": email, "role": role}
+                new_member = {
+                    "id": new_id,
+                    "name": body.get("name") or email.split("@")[0],
+                    "email": email,
+                    "role": role,
+                    "permissions": {"dashboards": [], "widgets": []} # Default permissions
+                }
                 team.append(new_member)
                 write_team_data(team)
                 status, payload = 201, {"message": "Invitation sent", "member": new_member}
@@ -335,13 +454,18 @@ def application(environ, start_response):
                 if member is None:
                     status, payload = 404, {"message": "Team member not found"}
                 elif method == "PUT":
-                    new_role = body.get("role")
-                    if new_role not in ["L1", "L2", "L3", "L4", "invited"]:
-                        status, payload = 400, {"message": "Invalid role"}
-                    else:
-                        member['role'] = new_role
-                        write_team_data(team)
-                        status, payload = 200, {"member": member}
+                    if 'role' in body:
+                        new_role = body.get("role")
+                        if new_role not in ["L1", "L2", "L3", "L4", "invited"]:
+                            status, payload = 400, {"message": "Invalid role"}
+                        else:
+                            member['role'] = new_role
+
+                    if 'permissions' in body:
+                        member['permissions'] = body.get('permissions')
+
+                    write_team_data(team)
+                    status, payload = 200, {"member": member}
                 elif method == "DELETE":
                     team.pop(member_index)
                     write_team_data(team)
@@ -370,6 +494,32 @@ def application(environ, start_response):
                 status, payload = 200, {"subscription": subscriptions[user_id]}
             else:
                 status, payload = 400, {"message": "Invalid plan"}
+        elif path == "/user/profile" and method == "GET":
+            # Return the authenticated user's profile based on Authorization header
+            auth = environ.get('HTTP_AUTHORIZATION', '')
+            if auth.startswith('Bearer '):
+                token = auth.split(' ', 1)[1]
+                # token format used in login: f"token-for-{role}"
+                role = None
+                if token.startswith('token-for-'):
+                    role = token.replace('token-for-', '')
+
+                user = None
+                if role:
+                    # Find a user with matching role
+                    for u in USERS.values():
+                        if u.get('role') == role:
+                            user = {k: v for k, v in u.items() if k != 'password'}
+                            user['token'] = token
+                            break
+
+                if user:
+                    status, payload = 200, {"user": user}
+                else:
+                    status, payload = 401, {"message": "Invalid or expired token"}
+            else:
+                status, payload = 401, {"message": "Authorization required"}
+
         elif path == "/user/profile" and method == "PUT":
             # This is a mock endpoint, in a real app it would update a database
             updated_user_data = body

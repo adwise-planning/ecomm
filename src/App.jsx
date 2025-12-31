@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 
 const Login = lazy(() => import('./pages/Login.jsx'));
+const SignUp = lazy(() => import('./pages/SignUp.jsx'));
 const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
 const OrdersTable = lazy(() => import('./pages/OrdersTable.jsx'));
 const Settings = lazy(() => import('./pages/Settings.jsx'));
@@ -28,6 +29,7 @@ function App() {
           <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
 
               <Route path="/" element={<MainLayout />}>
               <Route index element={<Dashboard />} />
