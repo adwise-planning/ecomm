@@ -53,6 +53,15 @@ export const api = {
     }
   },
 
+  getAllUsers: async () => {
+    try {
+      const response = await apiClient.get('/users/all');
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
   getUsers: async () => {
     try {
       const response = await apiClient.get('/users');
@@ -85,6 +94,26 @@ export const api = {
         params.append('paymentMode', filters.paymentMode);
       }
       const response = await apiClient.get(`/orders?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  // This is the new, more detailed RTO analysis endpoint.
+  // The old getRtoAnalytics can be deprecated or used for a different summary widget.
+  getRtoAnalysis: async () => {
+    try {
+      const response = await apiClient.get('/analytics/rto-analysis');
+      return response.data;
+    } catch (error) {
+      handleError(error);
+    }
+  },
+
+  getShippingCostPerOrder: async (range = '30d') => {
+    try {
+      const response = await apiClient.get(`/analytics/shipping-cost-per-order?range=${range}`);
       return response.data;
     } catch (error) {
       handleError(error);

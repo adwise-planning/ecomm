@@ -1,6 +1,42 @@
 [
-    {"id": 1, "name": "Aarav Sharma", "email": "aarav.sharma@example.com", "role": "L1"},
-    {"id": 2, "name": "Diya Patel", "email": "diya.patel@example.com", "role": "L3"},
-    {"id": 3, "name": "Rohan Mehta", "email": "rohan.mehta@example.com", "role": "L2"},
-    {"id": 4, "name": "Priya Singh", "email": "priya.singh@example.com", "role": "L4"}
+    {
+        "id": 1,
+        "name": "Aarav Sharma",
+        "email": "aarav.sharma@example.com",
+        "role": "L1",
+        "permissions": {
+            "dashboards": [],
+            "widgets": []
+        }
+    },
+    {
+        "id": 2,
+        "name": "Diya Patel",
+        "email": "diya.patel@example.com",
+        "role": "L3",
+        "permissions": {
+            "dashboards": [],
+            "widgets": []
+        }
+    },
+    {
+        "id": 3,
+        "name": "Rohan Mehta",
+        "email": "rohan.mehta@example.com",
+        "role": "L2",
+        "permissions": {
+            "dashboards": [],
+            "widgets": []
+        }
+    },
+    {
+        "id": 4,
+        "name": "Priya Singh",
+        "email": "priya.singh@example.com",
+        "role": "L4",
+        "permissions": {
+            "dashboards": ["main_dashboard"],
+            "widgets": ["revenue", "orders"]
+        }
+    }
 ]

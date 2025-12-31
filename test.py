@@ -308,6 +308,31 @@ def generate_meta_ads_analytics(range_str):
         ]
     }
 
+def generate_detailed_rto_analysis():
+    regions = ["North", "South", "East", "West", "Central"]
+    return {
+        "analysis": [
+            {
+                "region": region,
+                "rto_percentage": round(random.uniform(5, 20), 2),
+                "total_orders": random.randint(500, 2000)
+            } for region in regions
+        ]
+    }
+
+def generate_shipping_cost_per_order_data(range_str):
+    days = int(range_str.replace('d', ''))
+    data = []
+    end_date = datetime.now()
+    for i in range(days):
+        date = end_date - timedelta(days=i)
+        data.append({
+            "order_date": date.strftime('%Y-%m-%d'),
+            "shipping_cost": round(random.uniform(80, 150), 2)
+        })
+    data.reverse()
+    return {"analysis": data}
+
 
 # --- Main Application ---
 
@@ -330,6 +355,10 @@ def application(environ, start_response):
             # Exclude L1 admin for impersonation list
             user_list = [u for u in USERS.values() if u['role'] != 'L1']
             payload = {"users": user_list}
+            status = 200
+        elif path == "/users/all" and method == "GET":
+            # Returns all users for the L1 admin view
+            payload = {"users": list(USERS.values())}
             status = 200
         elif path == "/dashboard/metrics" and method == "GET":
             range_days = qs.get("range", ["30d"])[0]
@@ -369,6 +398,13 @@ def application(environ, start_response):
             range_days = qs.get("range", ["30d"])[0]
             payload = generate_meta_ads_analytics(range_days)
             status = 200
+        elif path == "/analytics/rto-analysis" and method == "GET":
+            payload = generate_detailed_rto_analysis()
+            status = 200
+        elif path == "/analytics/shipping-cost-per-order" and method == "GET":
+            range_days = qs.get("range", ["30d"])[0]
+            payload = generate_shipping_cost_per_order_data(range_days)
+            status = 200
         elif path == "/ai/recommendations" and method == "GET":
             payload = generate_recommendations()
             status = 200
@@ -396,7 +432,13 @@ def application(environ, start_response):
             else:
                 team = read_team_data()
                 new_id = max(m['id'] for m in team) + 1 if team else 1
-                new_member = {"id": new_id, "name": body.get("name") or email.split("@")[0], "email": email, "role": role}
+                new_member = {
+                    "id": new_id,
+                    "name": body.get("name") or email.split("@")[0],
+                    "email": email,
+                    "role": role,
+                    "permissions": {"dashboards": [], "widgets": []} # Default permissions
+                }
                 team.append(new_member)
                 write_team_data(team)
                 status, payload = 201, {"message": "Invitation sent", "member": new_member}
@@ -412,13 +454,18 @@ def application(environ, start_response):
                 if member is None:
                     status, payload = 404, {"message": "Team member not found"}
                 elif method == "PUT":
-                    new_role = body.get("role")
-                    if new_role not in ["L1", "L2", "L3", "L4", "invited"]:
-                        status, payload = 400, {"message": "Invalid role"}
-                    else:
-                        member['role'] = new_role
-                        write_team_data(team)
-                        status, payload = 200, {"member": member}
+                    if 'role' in body:
+                        new_role = body.get("role")
+                        if new_role not in ["L1", "L2", "L3", "L4", "invited"]:
+                            status, payload = 400, {"message": "Invalid role"}
+                        else:
+                            member['role'] = new_role
+
+                    if 'permissions' in body:
+                        member['permissions'] = body.get('permissions')
+
+                    write_team_data(team)
+                    status, payload = 200, {"member": member}
                 elif method == "DELETE":
                     team.pop(member_index)
                     write_team_data(team)

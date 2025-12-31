@@ -4,9 +4,10 @@ import OrdersWidget from '../../components/dashboard/OrdersWidget';
 import RtoWidget from '../../components/dashboard/RtoWidget';
 import RoiWidget from '../../components/dashboard/RoiWidget';
 import RtoTrendChart from '../../components/dashboard/charts/RtoTrendChart';
-import RtoByRegionChart from '../../components/dashboard/charts/RtoByRegionChart';
 import ShippingCostChart from '../../components/dashboard/charts/ShippingCostChart';
 import MetaAdsChart from '../../components/dashboard/charts/MetaAdsChart';
+import RtoAnalysisChart from '../../components/dashboard/RtoAnalysisChart';
+import ShippingCostPerOrderChart from '../../components/dashboard/ShippingCostPerOrderChart';
 import { RefreshCw, Calendar } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -52,11 +53,14 @@ const L3DashboardView = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <RtoTrendChart dateRange={dateRange} />
-        <RtoByRegionChart />
+        <ShippingCostChart dateRange={dateRange} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ShippingCostChart dateRange={dateRange} />
         <MetaAdsChart dateRange={dateRange} />
+        <RtoAnalysisChart />
+      </div>
+      <div className="grid grid-cols-1">
+        <ShippingCostPerOrderChart dateRange={dateRange} />
       </div>
     </div>
   );
