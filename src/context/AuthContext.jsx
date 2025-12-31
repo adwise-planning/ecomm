@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
+import { hasPermission as checkUserPermission } from '../lib/permissions';
 
 const AuthContext = createContext(null);
 
@@ -40,8 +41,13 @@ export const AuthProvider = ({ children }) => {
     toast.success('Logged out');
   };
 
+  const hasPermission = (permission) => {
+    if (!user) return false;
+    return checkUserPermission(user.role, permission);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, hasPermission }}>
       {!loading && children}
     </AuthContext.Provider>
   );

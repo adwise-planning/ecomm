@@ -73,21 +73,25 @@ const L3DashboardView = () => {
 };
 
 
-const Dashboard = () => {
-  const { user } = useAuth();
+import RoleBasedView from '../components/RoleBasedView';
 
-  switch (user.role) {
-    case 'L1':
-      return <L1DashboardView />;
-    case 'L2':
-      return <L2DashboardView />;
-    case 'L3':
-      return <L3DashboardView />;
-    case 'L4':
-      return <L4DashboardView />;
-    default:
-      return <div>No dashboard available for your role.</div>;
-  }
+const Dashboard = () => {
+  return (
+    <>
+      <RoleBasedView permission="global.can_view_global_dashboard">
+        <L1DashboardView />
+      </RoleBasedView>
+      <RoleBasedView permission="dashboard.can_view_assigned_dashboards">
+        <L2DashboardView />
+      </RoleBasedView>
+      <RoleBasedView permission="dashboard.can_view_company_dashboard">
+        <L3DashboardView />
+      </RoleBasedView>
+      <RoleBasedView permission="dashboard.can_view_shared_dashboards">
+        <L4DashboardView />
+      </RoleBasedView>
+    </>
+  );
 };
 
 export default Dashboard;
