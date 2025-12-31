@@ -1,11 +1,27 @@
 import React from 'react';
+import StatCard from '../../StatCard';
+import { Skeleton } from '../../ui/Skeleton';
+import { useDashboardMetrics } from '../../../hooks/useDashboardMetrics';
+import WidgetError from '../WidgetError';
 
-const CombinedRevenueWidget = () => {
+const CombinedRevenueWidget = ({ dateRange }) => {
+  const { data: metrics, isLoading, isError, error } = useDashboardMetrics(dateRange, 'combinedRevenue');
+
+  if (isError) {
+    return <WidgetError message={error.message} />;
+  }
+
+  if (isLoading || !metrics) {
+    return <div className="card h-32"><Skeleton className="h-full w-full" /></div>;
+  }
+
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md dark:bg-slate-800">
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white">Combined Revenue</h3>
-      <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">$1.2M</p>
-    </div>
+    <StatCard
+      title="Combined Revenue"
+      value={metrics?.value}
+      growth={metrics?.growth}
+      prefix="₹"
+    />
   );
 };
 

@@ -17,15 +17,13 @@ const SignUp = () => {
       toast.error('You must agree to the terms and privacy policy.');
       return;
     }
-    // This is a mock signup. In a real app, you'd call a signup endpoint.
-    // We will simulate a login after "signup" for demonstration purposes.
-    toast.success('Signup successful! Please verify your OTP.');
-    // In a real flow, you would redirect to an OTP verification page.
-    // For now, we'll just log in the user with a mock OTP.
-    const success = await login(email, '123456'); // Mock OTP
-    if (success) {
-      navigate('/');
-    }
+    // In a real application, an API call would be made here to register the user.
+    // Since this is a frontend-only task, we will simulate a successful registration.
+    toast.success('Registration successful! Please check your email for verification.');
+    // Redirect the user to the login page after a short delay.
+    setTimeout(() => {
+      navigate('/login');
+    }, 2000);
   };
 
   return (

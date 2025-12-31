@@ -6,6 +6,7 @@ import {
   LayoutDashboard, BarChart3, Zap, Settings, LogOut, Menu, X, Layers, 
   CreditCard, Sun, Moon, Table, Users
 } from 'lucide-react';
+import ImpersonationBanner from '../components/ImpersonationBanner';
 
 const SidebarItem = ({ to, icon, label }) => {
   const Icon = icon;
@@ -78,6 +79,7 @@ const MainLayout = () => {
 
       {/* Main Content */}
       <div className="md:ml-64 flex-1 flex flex-col min-w-0 overflow-hidden">
+        <ImpersonationBanner />
         <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 md:px-8 transition-colors">
           <button className="md:hidden p-2 text-slate-600" onClick={() => setIsMobileMenuOpen(true)}>
             <Menu size={24} />

@@ -4,8 +4,8 @@ import { Skeleton } from '../../ui/Skeleton';
 import { useDashboardMetrics } from '../../../hooks/useDashboardMetrics';
 import WidgetError from '../WidgetError';
 
-const ActiveUsersWidget = ({ dateRange }) => {
-  const { data: metrics, isLoading, isError, error } = useDashboardMetrics(dateRange, 'activeUsers');
+const L4UsersWidget = ({ dateRange }) => {
+  const { data: metrics, isLoading, isError, error } = useDashboardMetrics(dateRange, 'l4Users');
 
   if (isError) {
     return <WidgetError message={error.message} />;
@@ -17,11 +17,10 @@ const ActiveUsersWidget = ({ dateRange }) => {
 
   return (
     <StatCard
-      title="Active Users"
+      title="L4 Users"
       value={metrics?.value}
-      growth={metrics?.growth}
     />
   );
 };
 
-export default ActiveUsersWidget;
+export default L4UsersWidget;
