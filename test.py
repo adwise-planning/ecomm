@@ -494,6 +494,32 @@ def application(environ, start_response):
                 status, payload = 200, {"subscription": subscriptions[user_id]}
             else:
                 status, payload = 400, {"message": "Invalid plan"}
+        elif path == "/user/profile" and method == "GET":
+            # Return the authenticated user's profile based on Authorization header
+            auth = environ.get('HTTP_AUTHORIZATION', '')
+            if auth.startswith('Bearer '):
+                token = auth.split(' ', 1)[1]
+                # token format used in login: f"token-for-{role}"
+                role = None
+                if token.startswith('token-for-'):
+                    role = token.replace('token-for-', '')
+
+                user = None
+                if role:
+                    # Find a user with matching role
+                    for u in USERS.values():
+                        if u.get('role') == role:
+                            user = {k: v for k, v in u.items() if k != 'password'}
+                            user['token'] = token
+                            break
+
+                if user:
+                    status, payload = 200, {"user": user}
+                else:
+                    status, payload = 401, {"message": "Invalid or expired token"}
+            else:
+                status, payload = 401, {"message": "Authorization required"}
+
         elif path == "/user/profile" and method == "PUT":
             # This is a mock endpoint, in a real app it would update a database
             updated_user_data = body
